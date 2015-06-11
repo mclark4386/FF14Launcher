@@ -18,6 +18,8 @@ import re
 import os
 import hashlib
 import sys
+import ssl
+context = ssl._create_unverified_context()
 
 def gen_hash(file):
 	return str(os.stat(file).st_size) + "/" + hashlib.sha1(open(file, "rb").read()).hexdigest()
@@ -73,7 +75,7 @@ def gen_launcher_string(username,password,otpw,gamepath):
 
 	gamever_req = urllib2.Request(gamever_url, hash_str, headers)
 	
-	gamever_result = urllib2.urlopen(gamever_req)
+	gamever_result = urllib2.urlopen(gamever_req, context=context)
 	actual_sid = gamever_result.info().getheader("X-Patch-Unique-Id")
 	return (('wine' if wine else '') + ' ffxiv.exe "DEV.TestSID='+ actual_sid + '" "DEV.UseSqPack=1" "DEV.DataPathType=1" "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994" "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994" "SYS.Region=3" "language=1" "ver='+version+'"')
 
