@@ -11,6 +11,7 @@ user = "user"
 passwd = "pass"
 path = "/" #Path containing boot and game
 wine = True #Prefix execution with 'wine' (for Linux/Mac)
+one_time_password = ''
 
 import urllib2
 import urllib
@@ -24,9 +25,8 @@ context = ssl._create_unverified_context()
 def gen_hash(file):
 	return str(os.stat(file).st_size) + "/" + hashlib.sha1(open(file, "rb").read()).hexdigest()
 
-ot = ''
 if len(sys.argv) > 1:
-	ot = sys.argv[1]
+	one_time_password = sys.argv[1]
 if len(sys.argv) > 2:
 	user = sys.argv[2]
 	passwd = sys.argv[3]
@@ -79,6 +79,6 @@ def gen_launcher_string(username,password,otpw,gamepath):
 	actual_sid = gamever_result.info().getheader("X-Patch-Unique-Id")
 	return (('wine' if wine else '') + ' ffxiv.exe "DEV.TestSID='+ actual_sid + '" "DEV.UseSqPack=1" "DEV.DataPathType=1" "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994" "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994" "SYS.Region=3" "language=1" "ver='+version+'"')
 
-launch = gen_launcher_string(user,passwd,ot,path)
+launch = gen_launcher_string(user,passwd,one_time_password,path)
 print(launch)
 os.system(launch)
