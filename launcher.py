@@ -3,7 +3,7 @@
 # Author: Jordan Henderson
 # This is a fairly quick and nasty implementation of a functional launcher for FFXIV.
 # TODO: ffxivupdate support.
-# refactoring and changes: Matthew Clark
+# refactoring and changes: Matthew Clark, Arthur Moore
 
 # Configuration
 region = "3" #Region for authentication checking.
