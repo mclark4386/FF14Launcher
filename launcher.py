@@ -9,7 +9,8 @@
 region = "3" #Region for authentication checking.
 user = "user"
 path = "/" #Path containing boot and game
-wine = True #Prefix execution with 'wine' (for Linux/Mac)
+wine_command = 'wine' #Prefix execution with 'wine' (for Linux/Mac)
+#wine_command = ''  #For Windows
 one_time_password = ''
 
 import urllib2
@@ -80,7 +81,7 @@ def gen_launcher_string(username,password,otpw,gamepath):
 	
 	gamever_result = urllib2.urlopen(gamever_req, context=context)
 	actual_sid = gamever_result.info().getheader("X-Patch-Unique-Id")
-	return (('wine' if wine else '') + ' ffxiv.exe "DEV.TestSID='+ actual_sid + '" "DEV.UseSqPack=1" "DEV.DataPathType=1" "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994" "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994" "SYS.Region=3" "language=1" "ver='+version+'"')
+	return (wine_command + ' ffxiv.exe "DEV.TestSID='+ actual_sid + '" "DEV.UseSqPack=1" "DEV.DataPathType=1" "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994" "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994" "SYS.Region=3" "language=1" "ver='+version+'"')
 
 launch = gen_launcher_string(user,passwd,one_time_password,path)
 print(launch)
