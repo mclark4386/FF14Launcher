@@ -8,7 +8,6 @@
 # Configuration
 region = "3" #Region for authentication checking.
 user = "user"
-passwd = "pass"
 path = "/" #Path containing boot and game
 wine = True #Prefix execution with 'wine' (for Linux/Mac)
 one_time_password = ''
@@ -20,6 +19,10 @@ import os
 import hashlib
 import sys
 import ssl
+from getpass import getpass
+
+passwd = getpass()
+
 context = ssl._create_unverified_context()
 
 def gen_hash(file):
