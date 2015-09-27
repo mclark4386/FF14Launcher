@@ -54,7 +54,7 @@ def gen_launcher_string(username,password,otpw,gamepath):
 	m = re.search('<input type="hidden" name="_STORED_" value="(.*)"', response)
 	headers = {"User-Agent":"SQEXAuthor/2.0.0(Windows 6.2; ja-jp; ecf4a84335)", "Cookie": cookies,
 		   "Referer": login_url, "Content-Type": "application/x-www-form-urlencoded"}
-	print("user:"+username+" pass:"+password+" otpw:"+otpw)
+	#print("user:"+username+" pass:"+password+" otpw:"+otpw)
 	login_data = urllib.urlencode({'_STORED_':m.group(1), 'sqexid':username, 'password':password, 'otppw':otpw})
 	login_req = urllib2.Request("https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/login.send",
 				    login_data, headers)
