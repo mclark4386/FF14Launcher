@@ -8,10 +8,10 @@
 # Configuration
 USEGUI = True # Use a gui to ask for username, password, and one time password
 region = "3" #Region for authentication checking.
-user = "user"
 path = "/" #Path containing boot and game
 wine_command = 'wine' #Prefix execution with 'wine' (for Linux/Mac)
 #wine_command = ''  #For Windows
+user = ''
 password = ''
 one_time_password = ''
 
