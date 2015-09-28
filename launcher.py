@@ -3,14 +3,15 @@
 # Author: Jordan Henderson
 # This is a fairly quick and nasty implementation of a functional launcher for FFXIV.
 # TODO: ffxivupdate support.
-# refactoring and changes: Matthew Clark
+# refactoring and changes: Matthew Clark, Arthur Moore
 
 # Configuration
 region = "3" #Region for authentication checking.
 user = "user"
-passwd = "pass"
 path = "/" #Path containing boot and game
-wine = True #Prefix execution with 'wine' (for Linux/Mac)
+wine_command = 'wine' #Prefix execution with 'wine' (for Linux/Mac)
+#wine_command = ''  #For Windows
+one_time_password = ''
 
 import urllib2
 import urllib
@@ -19,14 +20,17 @@ import os
 import hashlib
 import sys
 import ssl
+from getpass import getpass
+
+passwd = getpass()
+
 context = ssl._create_unverified_context()
 
 def gen_hash(file):
 	return str(os.stat(file).st_size) + "/" + hashlib.sha1(open(file, "rb").read()).hexdigest()
 
-ot = ''
 if len(sys.argv) > 1:
-	ot = sys.argv[1]
+	one_time_password = sys.argv[1]
 if len(sys.argv) > 2:
 	user = sys.argv[2]
 	passwd = sys.argv[3]
@@ -50,7 +54,7 @@ def gen_launcher_string(username,password,otpw,gamepath):
 	m = re.search('<input type="hidden" name="_STORED_" value="(.*)"', response)
 	headers = {"User-Agent":"SQEXAuthor/2.0.0(Windows 6.2; ja-jp; ecf4a84335)", "Cookie": cookies,
 		   "Referer": login_url, "Content-Type": "application/x-www-form-urlencoded"}
-	print("user:"+username+" pass:"+password+" otpw:"+otpw)
+	#print("user:"+username+" pass:"+password+" otpw:"+otpw)
 	login_data = urllib.urlencode({'_STORED_':m.group(1), 'sqexid':username, 'password':password, 'otppw':otpw})
 	login_req = urllib2.Request("https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/login.send",
 				    login_data, headers)
@@ -77,8 +81,8 @@ def gen_launcher_string(username,password,otpw,gamepath):
 	
 	gamever_result = urllib2.urlopen(gamever_req, context=context)
 	actual_sid = gamever_result.info().getheader("X-Patch-Unique-Id")
-	return (('wine' if wine else '') + ' ffxiv.exe "DEV.TestSID='+ actual_sid + '" "DEV.UseSqPack=1" "DEV.DataPathType=1" "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994" "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994" "SYS.Region=3" "language=1" "ver='+version+'"')
+	return (wine_command + ' ffxiv.exe "DEV.TestSID='+ actual_sid + '" "DEV.UseSqPack=1" "DEV.DataPathType=1" "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994" "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994" "SYS.Region=3" "language=1" "ver='+version+'"')
 
-launch = gen_launcher_string(user,passwd,ot,path)
+launch = gen_launcher_string(user,passwd,one_time_password,path)
 print(launch)
 os.system(launch)
