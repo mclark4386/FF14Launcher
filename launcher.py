@@ -113,7 +113,11 @@ if (USEGUI == True):
 	OK.grid(row = 3, column = 1)
 	top.bind('<Return>', lambda _: OK.invoke())
 	top.bind('<KP_Enter>', lambda _: OK.invoke())
+
+	#Place window in center of screen
 	top.eval('tk::PlaceWindow %s center' % top.winfo_pathname(top.winfo_id()))
+	#Focus on the one time password box at start
+	E3.focus()
 	top.title("FFXIV Launcher")
 	top.mainloop()
 else:
