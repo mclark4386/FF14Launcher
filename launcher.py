@@ -76,24 +76,35 @@ def gen_launcher_string(region,username,password,otpw,gamepath):
 	actual_sid = gamever_result.info().getheader("X-Patch-Unique-Id")
 	return ('ffxiv.exe "DEV.TestSID='+ actual_sid + '" "DEV.UseSqPack=1" "DEV.DataPathType=1" "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994" "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994" "DEV.MaxEntitledExpansionID='+ expansionId +'" "SYS.Region=3" "language=1" "ver='+version+'"')
 
-def set_user_info(root,_user,_password,_one_time_password):
-	global user
-	global password
-	global one_time_password
-	user = _user
-	password = _password
-	one_time_password = _one_time_password
+def run(user,password,one_time_password):
+	#global root
+	#global path
+	try:
+		launch = wine_command + ' ' + gen_launcher_string(region,user,password,one_time_password,path)
+		print(launch)
+		os.system(launch)
+	except Exception, err:
+		print("Error:  " + str(err))
+
+def run_gui(root,user,password,one_time_password):
+	#global root
+	#global path
 	#Disable the GUI
 	root.quit()
 	root.destroy()
+	#Run the Program
+	try:
+		launch = wine_command + ' ' + gen_launcher_string(region,user,password,one_time_password,path)
+		print(launch)
+		os.system(launch)
+	except Exception, err:
+		import Tkinter
+		top = Tkinter.Tk()
+		top.wm_withdraw()
+		from tkMessageBox import showwarning
+		showwarning("Error", str(err), parent=top)
 
-if len(sys.argv) > 1:
-	one_time_password = sys.argv[1]
-if len(sys.argv) > 2:
-	user = sys.argv[2]
-	password = sys.argv[3]
-
-if (USEGUI == True):
+def gui_prompt(user="",password="",one_time_password=""):
 	import Tkinter
 	top = Tkinter.Tk()
 	L1 = Tkinter.Label(top, text="User Name")
@@ -109,7 +120,7 @@ if (USEGUI == True):
 	E3 = Tkinter.Entry(top, textvariable=Tkinter.StringVar(value=one_time_password))
 	E3.grid(row = 2, column = 1)
 
-	OK = Tkinter.Button(top, text ="Connect", command = lambda: set_user_info(top,E1.get(),E2.get(),E3.get()))
+	OK = Tkinter.Button(top, text ="Connect", command = lambda: run_gui(top,E1.get(),E2.get(),E3.get()))
 	OK.grid(row = 3, column = 1)
 	top.bind('<Return>', lambda _: OK.invoke())
 	top.bind('<KP_Enter>', lambda _: OK.invoke())
@@ -120,22 +131,20 @@ if (USEGUI == True):
 	E3.focus()
 	top.title("FFXIV Launcher")
 	top.mainloop()
+
+
+
+if len(sys.argv) > 1:
+	one_time_password = sys.argv[1]
+if len(sys.argv) > 2:
+	user = sys.argv[2]
+	password = sys.argv[3]
+
+if (USEGUI == True):
+    gui_prompt(user,password,one_time_password)
 else:
 	if (user == ''):
 		user = raw_input("User Name:  ")
 	if (password == ''):
 		password = getpass()
-
-try:
-	launch = wine_command + ' ' + gen_launcher_string(region,user,password,one_time_password,path)
-	print(launch)
-	os.system(launch)
-except Exception, err:
-	if (USEGUI == True):
-		import Tkinter
-		top = Tkinter.Tk()
-		top.wm_withdraw()
-		from tkMessageBox import showwarning
-		showwarning("Error", str(err), parent=top)
-	else:
-		print("Error:  " + str(err))
+	run(user,password,one_time_password)
