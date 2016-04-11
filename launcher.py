@@ -3,7 +3,7 @@
 # Author: Jordan Henderson
 # This is a fairly quick and nasty implementation of a functional launcher for FFXIV.
 # TODO: ffxivupdate support.
-# refactoring and changes: Matthew Clark, Arthur Moore, nemto
+# refactoring and changes: Matthew Clark, Arthur Moore, Stian E. Syvertsen
 
 # Configuration
 USEGUI = True           # Use a gui to ask for username, password, and one time password
