@@ -26,77 +26,65 @@ import sys
 import ssl
 from getpass import getpass
 
+def open_url(url,data,headers,context=None):
+    req = urllib2.Request(url, data, headers)
+    return urllib2.urlopen(req,context=context)
+
 def gen_hash(file):
 	return str(os.stat(file).st_size) + "/" + hashlib.sha1(open(file, "rb").read()).hexdigest()
 
-def gen_launcher_string(region,username,password,otpw,gamepath):
-	context = ssl._create_unverified_context()
-
-	os.chdir(gamepath + "/game")
-
-	version = ""
-	with open('ffxivgame.ver', 'r') as f:
-		version = f.readline()
-
+#Performs login routine to get sid
+def login(region,username,password,one_time_password):
+	#Get the login page for the region
 	headers = {"User-Agent":"SQEXAuthor/2.0.0(Windows 6.2; ja-jp; ecf4a84335)"}
 	login_url = "https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/top?lng=en&rgn="+region
-	login_info_req = urllib2.Request(login_url, None, headers)
-
-	login_info = urllib2.urlopen(login_info_req)
+	login_info = open_url(login_url, None, headers)
 	cookies = login_info.headers.get('Set-Cookie')
 	response = login_info.read()
-
 	m = re.search('<input type="hidden" name="_STORED_" value="(.*)"', response)
+	if not m:
+		raise Exception("Unable to access login page. Please try again.")
+
+	#Authenticate with the server, and get the sid
 	headers = {"User-Agent":"SQEXAuthor/2.0.0(Windows 6.2; ja-jp; ecf4a84335)", "Cookie": cookies,
 		   "Referer": login_url, "Content-Type": "application/x-www-form-urlencoded"}
-
-	login_data = urllib.urlencode({'_STORED_':m.group(1), 'sqexid':username, 'password':password, 'otppw':otpw})
-	login_req = urllib2.Request("https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/login.send",
-				    login_data, headers)
-
-	login_result = urllib2.urlopen(login_req)
-	response = login_result.read()
+	login_data = urllib.urlencode({'_STORED_':m.group(1), 'sqexid':username, 'password':password, 'otppw':one_time_password})
+	login_url_2 = "https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/login.send"
+	response = open_url(login_url_2, login_data, headers).read()
 	m = re.search('login=auth,ok,sid,(.+?),', response)
 	if not m:
 		raise Exception("Login failed. Please try again.")
 
-	sid = m.group(1)
+	return m.group(1)
 
-	#gamever headers
-	headers = {"X-Hash-Check":"enabled"}
-
+def gen_launcher_string(sid,gamepath):
 	#Use the patch gamever service to retrieve our *actual* sid.
+	version = ""
+	with open(gamepath+'/game/ffxivgame.ver', 'r') as f:
+		version = f.readline()
+	headers = {"X-Hash-Check":"enabled"}
 	gamever_url = "https://patch-gamever.ffxiv.com/http/win32/ffxivneo_release_game/"+version+"/"+sid
-
 	#calculate hashes...
-	hash_str = "ffxivboot.exe/" + gen_hash("../boot/ffxivboot.exe") + "," + "ffxivlauncher.exe/" + gen_hash("../boot/ffxivlauncher.exe") + "," + "ffxivupdater.exe/" + gen_hash("../boot/ffxivupdater.exe")
+	hash_str = "ffxivboot.exe/" + gen_hash(gamepath+"/boot/ffxivboot.exe") + "," + "ffxivlauncher.exe/" + gen_hash(gamepath+"/boot/ffxivlauncher.exe") + "," + "ffxivupdater.exe/" + gen_hash(gamepath+"/boot/ffxivupdater.exe")
 
-	gamever_req = urllib2.Request(gamever_url, hash_str, headers)
-	gamever_result = urllib2.urlopen(gamever_req, context=context)
+	gamever_result = open_url(gamever_url, hash_str, headers, ssl._create_unverified_context())
 	actual_sid = gamever_result.info().getheader("X-Patch-Unique-Id")
-	return ('ffxiv.exe "DEV.TestSID='+ actual_sid + '" "DEV.UseSqPack=1" "DEV.DataPathType=1" "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994" "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994" "DEV.MaxEntitledExpansionID='+ expansionId +'" "SYS.Region=3" "language=1" "ver='+version+'"')
 
-def run(user,password,one_time_password):
-	#global root
-	#global path
-	try:
-		launch = wine_command + ' ' + gen_launcher_string(region,user,password,one_time_password,path)
-		print(launch)
-		os.system(launch)
-	except Exception, err:
-		print("Error:  " + str(err))
+	return ('\''+gamepath+'/game/ffxiv.exe\' "DEV.TestSID='+ actual_sid + '" "DEV.UseSqPack=1" "DEV.DataPathType=1" "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994" "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994" "DEV.MaxEntitledExpansionID='+ expansionId +'" "SYS.Region=3" "language=1" "ver='+version+'"')
 
-def run_gui(root,user,password,one_time_password):
-	#global root
-	#global path
+def run(username,password,one_time_password):
+	sid=login(region,username,password,one_time_password)
+	launch = wine_command + ' ' + gen_launcher_string(sid,path)
+	print(launch)
+	os.system(launch)
+
+def run_gui(root,username,password,one_time_password):
 	#Disable the GUI
 	root.quit()
 	root.destroy()
 	#Run the Program
 	try:
-		launch = wine_command + ' ' + gen_launcher_string(region,user,password,one_time_password,path)
-		print(launch)
-		os.system(launch)
+		run(username,password,one_time_password)
 	except Exception, err:
 		import Tkinter
 		top = Tkinter.Tk()
@@ -147,4 +135,7 @@ else:
 		user = raw_input("User Name:  ")
 	if (password == ''):
 		password = getpass()
-	run(user,password,one_time_password)
+	try:
+		run(user,password,one_time_password)
+	except Exception, err:
+		print("Error:  " + str(err))
