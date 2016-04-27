@@ -16,7 +16,6 @@ user = ''
 password = ''
 one_time_password = ''
 
-
 import urllib2
 import urllib
 import re
@@ -46,8 +45,12 @@ def login(region,username,password,one_time_password):
 		raise Exception("Unable to access login page. Please try again.")
 
 	#Authenticate with the server, and get the sid
-	headers = {"User-Agent":"SQEXAuthor/2.0.0(Windows 6.2; ja-jp; ecf4a84335)", "Cookie": cookies,
-		   "Referer": login_url, "Content-Type": "application/x-www-form-urlencoded"}
+	headers = {
+		"User-Agent":"SQEXAuthor/2.0.0(Windows 6.2; ja-jp; ecf4a84335)",
+		"Cookie": cookies,
+		"Referer": login_url,
+		"Content-Type": "application/x-www-form-urlencoded"
+	}
 	login_data = urllib.urlencode({'_STORED_':m.group(1), 'sqexid':username, 'password':password, 'otppw':one_time_password})
 	login_url_2 = "https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/login.send"
 	response = open_url(login_url_2, login_data, headers).read()
@@ -58,6 +61,16 @@ def login(region,username,password,one_time_password):
 	return m.group(1)
 
 def gen_launcher_string(sid,gamepath):
+	launcher_str = '\'{gamepath}/game/ffxiv.exe\'' \
+		+' "language=1"' \
+		+' "DEV.UseSqPack=1" "DEV.DataPathType=1"' \
+		+' "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994"' \
+		+' "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994"' \
+		+' "DEV.TestSID={actual_sid}"' \
+		+' "DEV.MaxEntitledExpansionID={expansionId}"' \
+		+' "SYS.Region={region}"' \
+		+' "ver={version}"'
+
 	#Use the patch gamever service to retrieve our *actual* sid.
 	version = ""
 	with open(gamepath+'/game/ffxivgame.ver', 'r') as f:
@@ -65,12 +78,14 @@ def gen_launcher_string(sid,gamepath):
 	headers = {"X-Hash-Check":"enabled"}
 	gamever_url = "https://patch-gamever.ffxiv.com/http/win32/ffxivneo_release_game/"+version+"/"+sid
 	#calculate hashes...
-	hash_str = "ffxivboot.exe/" + gen_hash(gamepath+"/boot/ffxivboot.exe") + "," + "ffxivlauncher.exe/" + gen_hash(gamepath+"/boot/ffxivlauncher.exe") + "," + "ffxivupdater.exe/" + gen_hash(gamepath+"/boot/ffxivupdater.exe")
+	hash_str = "ffxivboot.exe/"     + gen_hash(gamepath+"/boot/ffxivboot.exe") \
+		+ ","+ "ffxivlauncher.exe/" + gen_hash(gamepath+"/boot/ffxivlauncher.exe") \
+		+ ","+ "ffxivupdater.exe/"  + gen_hash(gamepath+"/boot/ffxivupdater.exe")
 
 	gamever_result = open_url(gamever_url, hash_str, headers, ssl._create_unverified_context())
 	actual_sid = gamever_result.info().getheader("X-Patch-Unique-Id")
 
-	return ('\''+gamepath+'/game/ffxiv.exe\' "DEV.TestSID='+ actual_sid + '" "DEV.UseSqPack=1" "DEV.DataPathType=1" "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994" "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994" "DEV.MaxEntitledExpansionID='+ expansionId +'" "SYS.Region=3" "language=1" "ver='+version+'"')
+	return launcher_str.format(gamepath=gamepath,actual_sid=actual_sid,expansionId=expansionId,region=region,version=version)
 
 def run(username,password,one_time_password):
 	sid=login(region,username,password,one_time_password)
