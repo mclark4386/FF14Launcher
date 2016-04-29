@@ -16,18 +16,22 @@ user = ''
 password = ''
 one_time_password = ''
 
-import urllib2
-import urllib
 import re
 import os
 import hashlib
 import sys
 import ssl
 from getpass import getpass
+if (sys.version_info >= (3,0)):
+    from urllib.request import Request,urlopen
+    from urllib.parse import urlencode
+else:
+    from urllib2 import  Request,urlopen
+    from urllib  import urlencode
 
 def open_url(url,data,headers,context=None):
-    req = urllib2.Request(url, data, headers)
-    return urllib2.urlopen(req,context=context)
+    req = Request(url, data, headers)
+    return urlopen(req,context=context)
 
 def gen_hash(file):
 	return str(os.stat(file).st_size) + "/" + hashlib.sha1(open(file, "rb").read()).hexdigest()
@@ -51,7 +55,7 @@ def login(region,username,password,one_time_password):
 		"Referer": login_url,
 		"Content-Type": "application/x-www-form-urlencoded"
 	}
-	login_data = urllib.urlencode({'_STORED_':m.group(1), 'sqexid':username, 'password':password, 'otppw':one_time_password})
+	login_data = urlencode({'_STORED_':m.group(1), 'sqexid':username, 'password':password, 'otppw':one_time_password})
 	login_url_2 = "https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/login.send"
 	response = open_url(login_url_2, login_data, headers).read()
 	m = re.search('login=auth,ok,sid,(.+?),', response)
@@ -100,7 +104,7 @@ def run_gui(root,username,password,one_time_password):
 	#Run the Program
 	try:
 		run(username,password,one_time_password)
-	except Exception, err:
+	except Exception as err:
 		import Tkinter
 		top = Tkinter.Tk()
 		top.wm_withdraw()
@@ -152,5 +156,5 @@ else:
 		password = getpass()
 	try:
 		run(user,password,one_time_password)
-	except Exception, err:
+	except Exception as err:
 		print("Error:  " + str(err))
