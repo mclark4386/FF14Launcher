@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # FFXIV ARR Python Launcher - Python 2 or 3
 # Author: Jordan Henderson
 # This is a fairly quick and nasty implementation of a functional launcher for FFXIV.
