@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# FFXIV ARR Python Launcher - Python 2
+# FFXIV ARR Python Launcher - Python 2 or 3
 # Author: Jordan Henderson
 # This is a fairly quick and nasty implementation of a functional launcher for FFXIV.
 # TODO: ffxivupdate support.
@@ -43,7 +43,9 @@ def login(region,username,password,one_time_password):
 	login_url = "https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/top?lng=en&rgn="+region
 	login_info = open_url(login_url, None, headers)
 	cookies = login_info.headers.get('Set-Cookie')
-	response = login_info.read()
+	if (cookies == None):
+		cookies = ""
+	response = login_info.read().decode('utf-8')
 	m = re.search('<input type="hidden" name="_STORED_" value="(.*)"', response)
 	if not m:
 		raise Exception("Unable to access login page. Please try again.")
@@ -55,9 +57,9 @@ def login(region,username,password,one_time_password):
 		"Referer": login_url,
 		"Content-Type": "application/x-www-form-urlencoded"
 	}
-	login_data = urlencode({'_STORED_':m.group(1), 'sqexid':username, 'password':password, 'otppw':one_time_password})
+	login_data = urlencode({'_STORED_':m.group(1), 'sqexid':username, 'password':password, 'otppw':one_time_password}).encode('utf-8')
 	login_url_2 = "https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/login.send"
-	response = open_url(login_url_2, login_data, headers).read()
+	response = open_url(login_url_2, login_data, headers).read().decode('utf-8')
 	m = re.search('login=auth,ok,sid,(.+?),', response)
 	if not m:
 		raise Exception("Login failed. Please try again.")
@@ -86,8 +88,10 @@ def gen_launcher_string(sid,gamepath):
 		+ ","+ "ffxivlauncher.exe/" + gen_hash(gamepath+"/boot/ffxivlauncher.exe") \
 		+ ","+ "ffxivupdater.exe/"  + gen_hash(gamepath+"/boot/ffxivupdater.exe")
 
-	gamever_result = open_url(gamever_url, hash_str, headers, ssl._create_unverified_context())
-	actual_sid = gamever_result.info().getheader("X-Patch-Unique-Id")
+	gamever_result = open_url(gamever_url, hash_str.encode('utf-8'), headers, ssl._create_unverified_context()).info()
+	if (gamever_result.get("X-Latest-Version") != version):
+		raise Exception("Game out of date.  Please run the official launcher to update it.")
+	actual_sid = gamever_result.get("X-Patch-Unique-Id")
 
 	return launcher_str.format(gamepath=gamepath,actual_sid=actual_sid,expansionId=expansionId,region=region,version=version)
 
