@@ -105,29 +105,36 @@ def run_gui(root,username,password,one_time_password):
 	try:
 		run(username,password,one_time_password)
 	except Exception as err:
-		import Tkinter
-		top = Tkinter.Tk()
+		if (sys.version_info >= (3,0)):
+			import tkinter
+			from tkinter.messagebox import showwarning
+		else:
+			import Tkinter as tkinter
+			from tkMessageBox import showwarning
+		top = tkinter.Tk()
 		top.wm_withdraw()
-		from tkMessageBox import showwarning
 		showwarning("Error", str(err), parent=top)
 
 def gui_prompt(user="",password="",one_time_password=""):
-	import Tkinter
-	top = Tkinter.Tk()
-	L1 = Tkinter.Label(top, text="User Name")
+	if (sys.version_info >= (3,0)):
+		import tkinter
+	else:
+		import Tkinter as tkinter
+	top = tkinter.Tk()
+	L1 = tkinter.Label(top, text="User Name")
 	L1.grid(row = 0, column = 0)
-	E1 = Tkinter.Entry(top, textvariable=Tkinter.StringVar(value=user))
+	E1 = tkinter.Entry(top, textvariable=tkinter.StringVar(value=user))
 	E1.grid(row = 0, column = 1)
-	L2 = Tkinter.Label(top, text="Password")
+	L2 = tkinter.Label(top, text="Password")
 	L2.grid(row = 1, column = 0)
-	E2 = Tkinter.Entry(top, show="*", textvariable=Tkinter.StringVar(value=password))
+	E2 = tkinter.Entry(top, show="*", textvariable=tkinter.StringVar(value=password))
 	E2.grid(row = 1, column = 1)
-	L3 = Tkinter.Label(top, text="One Time Password")
+	L3 = tkinter.Label(top, text="One Time Password")
 	L3.grid(row = 2, column = 0)
-	E3 = Tkinter.Entry(top, textvariable=Tkinter.StringVar(value=one_time_password))
+	E3 = tkinter.Entry(top, textvariable=tkinter.StringVar(value=one_time_password))
 	E3.grid(row = 2, column = 1)
 
-	OK = Tkinter.Button(top, text ="Connect", command = lambda: run_gui(top,E1.get(),E2.get(),E3.get()))
+	OK = tkinter.Button(top, text ="Connect", command = lambda: run_gui(top,E1.get(),E2.get(),E3.get()))
 	OK.grid(row = 3, column = 1)
 	top.bind('<Return>', lambda _: OK.invoke())
 	top.bind('<KP_Enter>', lambda _: OK.invoke())
