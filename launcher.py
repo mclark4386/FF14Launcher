@@ -162,8 +162,9 @@ class gui_prompt:
 		self.top.title("FFXIV Launcher")
 		self.top.mainloop()
 
+config_path=os.path.dirname(os.path.realpath(sys.argv[0]))
 config = ConfigParser()
-config.read('launcher_config.ini')
+config.read(config_path+'/launcher_config.ini')
 settings = config._sections['FFXIV']
 
 if len(sys.argv) > 1:
