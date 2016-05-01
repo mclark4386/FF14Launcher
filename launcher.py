@@ -5,16 +5,6 @@
 # TODO: ffxivupdate support.
 # refactoring and changes: Matthew Clark, Arthur Moore, Stian E. Syvertsen
 
-# Configuration
-USEGUI = True           # Use a gui to ask for username, password, and one time password
-expansionId='0'         # Set this to 1 if you have Heavensward expansion installed.
-region = "3"            # Region for authentication checking.
-path = "/"              # Path containing boot and game (eg. "C:/Program Files (x86)/SquareEnix/FINAL FANTASY XIV - A Realm Reborn")
-wine_command = 'wine'   # Prefix execution with 'wine' (for Linux/Mac)
-#wine_command = ''      # For Windows
-user = ''
-password = ''
-one_time_password = ''
 
 import re
 import os
@@ -25,9 +15,11 @@ from getpass import getpass
 if (sys.version_info >= (3,0)):
     from urllib.request import Request,urlopen
     from urllib.parse import urlencode
+    from configparser import ConfigParser
 else:
     from urllib2 import  Request,urlopen
     from urllib  import urlencode
+    from ConfigParser import ConfigParser
 
 def open_url(url,data,headers,context=None):
     req = Request(url, data, headers)
@@ -85,38 +77,48 @@ def get_actual_sid(sid,gamepath):
 	actual_sid = gamever_result.get("X-Patch-Unique-Id")
 	return (actual_sid,version)
 
-def gen_launcher_string(actual_sid,version):
+def gen_launcher_string(settings):
 	launcher_str = '{wine_command}' \
-		+' \'{gamepath}/game/ffxiv.exe\'' \
+		+' \'{path}/game/ffxiv.exe\'' \
 		+' "language=1"' \
 		+' "DEV.UseSqPack=1" "DEV.DataPathType=1"' \
 		+' "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994"' \
 		+' "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994"' \
 		+' "DEV.TestSID={actual_sid}"' \
-		+' "DEV.MaxEntitledExpansionID={expansionId}"' \
+		+' "DEV.MaxEntitledExpansionID={expansion_id}"' \
 		+' "SYS.Region={region}"' \
 		+' "ver={version}"'
-	return launcher_str.format(wine_command=wine_command,gamepath=path,actual_sid=actual_sid,expansionId=expansionId,region=region,version=version)
+	return launcher_str.format(**settings)
 
-def run(username,password,one_time_password):
-	sid=login(region,username,password,one_time_password)
-	(actual_sid,version) = get_actual_sid(sid,path)
-	launch = gen_launcher_string(actual_sid,version)
+def run(settings):
+	sid=login(settings['region'],settings['user'],settings['password'],settings['one_time_password'])
+	(settings['actual_sid'],settings['version']) = get_actual_sid(sid,settings['path'])
+	launch = gen_launcher_string(settings)
 	print(launch)
 	os.system(launch)
+
+def run_cli(settings):
+	if (settings['user'] == ''):
+		settings['user'] = raw_input("User Name:  ")
+	if (settings['password'] == ''):
+		settings['password'] = getpass()
+	try:
+		run(settings)
+	except Exception as err:
+		print("Error:  " + str(err))
 
 class gui_prompt:
 	def run_gui(self):
 		#Store the user input
-		username=self.E1.get();
-		password=self.E2.get()
-		one_time_password=self.E3.get()
+		settings['user']=self.E1.get();
+		settings['password']=self.E2.get();
+		settings['one_time_password']=self.E3.get()
 		#Disable the GUI
 		self.top.quit()
 		self.top.destroy()
 		#Run the Program
 		try:
-			run(username,password,one_time_password)
+			run(settings)
 		except Exception as err:
 			if (sys.version_info >= (3,0)):
 				import tkinter
@@ -128,23 +130,24 @@ class gui_prompt:
 			top.wm_withdraw()
 			showwarning("Error", str(err), parent=top)
 
-	def __init__(self,user="",password="",one_time_password=""):
+	def __init__(self,settings):
 		if (sys.version_info >= (3,0)):
 			import tkinter
 		else:
 			import Tkinter as tkinter
 		self.top = tkinter.Tk()
+
 		self.L1 = tkinter.Label(self.top, text="User Name")
 		self.L1.grid(row = 0, column = 0)
-		self.E1 = tkinter.Entry(self.top, textvariable=tkinter.StringVar(value=user))
+		self.E1 = tkinter.Entry(self.top, textvariable=tkinter.StringVar(value=settings['user']))
 		self.E1.grid(row = 0, column = 1)
 		self.L2 = tkinter.Label(self.top, text="Password")
 		self.L2.grid(row = 1, column = 0)
-		self.E2 = tkinter.Entry(self.top, show="*", textvariable=tkinter.StringVar(value=password))
+		self.E2 = tkinter.Entry(self.top, show="*", textvariable=tkinter.StringVar(value=settings['password']))
 		self.E2.grid(row = 1, column = 1)
 		self.L3 = tkinter.Label(self.top, text="One Time Password")
 		self.L3.grid(row = 2, column = 0)
-		self.E3 = tkinter.Entry(self.top, textvariable=tkinter.StringVar(value=one_time_password))
+		self.E3 = tkinter.Entry(self.top, textvariable=tkinter.StringVar(value=settings['one_time_password']))
 		self.E3.grid(row = 2, column = 1)
 
 		self.OK = tkinter.Button(self.top, text ="Connect", command = self.run_gui)
@@ -159,22 +162,14 @@ class gui_prompt:
 		self.top.title("FFXIV Launcher")
 		self.top.mainloop()
 
-
+config = ConfigParser()
+config.read('launcher_config.ini')
+settings = config._sections['FFXIV']
 
 if len(sys.argv) > 1:
-	one_time_password = sys.argv[1]
-if len(sys.argv) > 2:
-	user = sys.argv[2]
-	password = sys.argv[3]
+	settings['one_time_password'] = sys.argv[1]
 
-if (USEGUI == True):
-    gui_prompt(user,password,one_time_password)
+if (config['FFXIV'].getboolean('USEGUI')):
+	gui_prompt(settings)
 else:
-	if (user == ''):
-		user = raw_input("User Name:  ")
-	if (password == ''):
-		password = getpass()
-	try:
-		run(user,password,one_time_password)
-	except Exception as err:
-		print("Error:  " + str(err))
+	run_cli(settings)
