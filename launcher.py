@@ -66,18 +66,9 @@ def login(region,username,password,one_time_password):
 
 	return m.group(1)
 
-def gen_launcher_string(sid,gamepath):
-	launcher_str = '\'{gamepath}/game/ffxiv.exe\'' \
-		+' "language=1"' \
-		+' "DEV.UseSqPack=1" "DEV.DataPathType=1"' \
-		+' "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994"' \
-		+' "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994"' \
-		+' "DEV.TestSID={actual_sid}"' \
-		+' "DEV.MaxEntitledExpansionID={expansionId}"' \
-		+' "SYS.Region={region}"' \
-		+' "ver={version}"'
-
-	#Use the patch gamever service to retrieve our *actual* sid.
+#Use the patch gamever service to retrieve our *actual* sid.
+#Also return's the game's version
+def get_actual_sid(sid,gamepath):
 	version = ""
 	with open(gamepath+'/game/ffxivgame.ver', 'r') as f:
 		version = f.readline()
@@ -92,12 +83,25 @@ def gen_launcher_string(sid,gamepath):
 	if (gamever_result.get("X-Latest-Version") != version):
 		raise Exception("Game out of date.  Please run the official launcher to update it.")
 	actual_sid = gamever_result.get("X-Patch-Unique-Id")
+	return (actual_sid,version)
 
-	return launcher_str.format(gamepath=gamepath,actual_sid=actual_sid,expansionId=expansionId,region=region,version=version)
+def gen_launcher_string(actual_sid,version):
+	launcher_str = '{wine_command}' \
+		+' \'{gamepath}/game/ffxiv.exe\'' \
+		+' "language=1"' \
+		+' "DEV.UseSqPack=1" "DEV.DataPathType=1"' \
+		+' "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994"' \
+		+' "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994"' \
+		+' "DEV.TestSID={actual_sid}"' \
+		+' "DEV.MaxEntitledExpansionID={expansionId}"' \
+		+' "SYS.Region={region}"' \
+		+' "ver={version}"'
+	return launcher_str.format(wine_command=wine_command,gamepath=path,actual_sid=actual_sid,expansionId=expansionId,region=region,version=version)
 
 def run(username,password,one_time_password):
 	sid=login(region,username,password,one_time_password)
-	launch = wine_command + ' ' + gen_launcher_string(sid,path)
+	(actual_sid,version) = get_actual_sid(sid,path)
+	launch = gen_launcher_string(actual_sid,version)
 	print(launch)
 	os.system(launch)
 
