@@ -105,54 +105,59 @@ def run(username,password,one_time_password):
 	print(launch)
 	os.system(launch)
 
-def run_gui(root,username,password,one_time_password):
-	#Disable the GUI
-	root.quit()
-	root.destroy()
-	#Run the Program
-	try:
-		run(username,password,one_time_password)
-	except Exception as err:
+class gui_prompt:
+	def run_gui(self):
+		#Store the user input
+		username=self.E1.get();
+		password=self.E2.get()
+		one_time_password=self.E3.get()
+		#Disable the GUI
+		self.top.quit()
+		self.top.destroy()
+		#Run the Program
+		try:
+			run(username,password,one_time_password)
+		except Exception as err:
+			if (sys.version_info >= (3,0)):
+				import tkinter
+				from tkinter.messagebox import showwarning
+			else:
+				import Tkinter as tkinter
+				from tkMessageBox import showwarning
+			top = tkinter.Tk()
+			top.wm_withdraw()
+			showwarning("Error", str(err), parent=top)
+
+	def __init__(self,user="",password="",one_time_password=""):
 		if (sys.version_info >= (3,0)):
 			import tkinter
-			from tkinter.messagebox import showwarning
 		else:
 			import Tkinter as tkinter
-			from tkMessageBox import showwarning
-		top = tkinter.Tk()
-		top.wm_withdraw()
-		showwarning("Error", str(err), parent=top)
+		self.top = tkinter.Tk()
+		self.L1 = tkinter.Label(self.top, text="User Name")
+		self.L1.grid(row = 0, column = 0)
+		self.E1 = tkinter.Entry(self.top, textvariable=tkinter.StringVar(value=user))
+		self.E1.grid(row = 0, column = 1)
+		self.L2 = tkinter.Label(self.top, text="Password")
+		self.L2.grid(row = 1, column = 0)
+		self.E2 = tkinter.Entry(self.top, show="*", textvariable=tkinter.StringVar(value=password))
+		self.E2.grid(row = 1, column = 1)
+		self.L3 = tkinter.Label(self.top, text="One Time Password")
+		self.L3.grid(row = 2, column = 0)
+		self.E3 = tkinter.Entry(self.top, textvariable=tkinter.StringVar(value=one_time_password))
+		self.E3.grid(row = 2, column = 1)
 
-def gui_prompt(user="",password="",one_time_password=""):
-	if (sys.version_info >= (3,0)):
-		import tkinter
-	else:
-		import Tkinter as tkinter
-	top = tkinter.Tk()
-	L1 = tkinter.Label(top, text="User Name")
-	L1.grid(row = 0, column = 0)
-	E1 = tkinter.Entry(top, textvariable=tkinter.StringVar(value=user))
-	E1.grid(row = 0, column = 1)
-	L2 = tkinter.Label(top, text="Password")
-	L2.grid(row = 1, column = 0)
-	E2 = tkinter.Entry(top, show="*", textvariable=tkinter.StringVar(value=password))
-	E2.grid(row = 1, column = 1)
-	L3 = tkinter.Label(top, text="One Time Password")
-	L3.grid(row = 2, column = 0)
-	E3 = tkinter.Entry(top, textvariable=tkinter.StringVar(value=one_time_password))
-	E3.grid(row = 2, column = 1)
+		self.OK = tkinter.Button(self.top, text ="Connect", command = self.run_gui)
+		self.OK.grid(row = 3, column = 1)
+		self.top.bind('<Return>', lambda _: self.OK.invoke())
+		self.top.bind('<KP_Enter>', lambda _: self.OK.invoke())
 
-	OK = tkinter.Button(top, text ="Connect", command = lambda: run_gui(top,E1.get(),E2.get(),E3.get()))
-	OK.grid(row = 3, column = 1)
-	top.bind('<Return>', lambda _: OK.invoke())
-	top.bind('<KP_Enter>', lambda _: OK.invoke())
-
-	#Place window in center of screen
-	top.eval('tk::PlaceWindow %s center' % top.winfo_pathname(top.winfo_id()))
-	#Focus on the one time password box at start
-	E3.focus()
-	top.title("FFXIV Launcher")
-	top.mainloop()
+		#Place window in center of screen
+		self.top.eval('tk::PlaceWindow %s center' % self.top.winfo_pathname(self.top.winfo_id()))
+		#Focus on the one time password box at start
+		self.E3.focus()
+		self.top.title("FFXIV Launcher")
+		self.top.mainloop()
 
 
 
