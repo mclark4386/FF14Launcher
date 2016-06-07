@@ -46,20 +46,20 @@ def login(region,username,password,one_time_password):
     cookies = login_info.headers.get('Set-Cookie')
     if (cookies != None):
         raise Exception("Login page has changed!  Please update to a newer version of this program.")
-    response = login_info.read().decode('utf-8')
-    m = re.search('<input type="hidden" name="_STORED_" value="(.*)"', response)
-    if not m:
+    response_data = login_info.read().decode('utf-8')
+    search_results = re.search('<input type="hidden" name="_STORED_" value="(.*)"', response_data)
+    if not search_results:
         raise Exception("Unable to access login page. Please try again.")
 
     #Authenticate with the server, and get the sid
     authentication_headers["Referer"]=login_url.format(lng='en',rgn=region)
-    login_data = urlencode({'_STORED_':m.group(1), 'sqexid':username, 'password':password, 'otppw':one_time_password}).encode('utf-8')
-    response = open_url(authentication_url, login_data, authentication_headers).read().decode('utf-8')
-    m = re.search('login=auth,ok,sid,(.+?),', response)
-    if not m:
+    login_data = urlencode({'_STORED_':search_results.group(1), 'sqexid':username, 'password':password, 'otppw':one_time_password}).encode('utf-8')
+    response_data = open_url(authentication_url, login_data, authentication_headers).read().decode('utf-8')
+    search_results = re.search('login=auth,ok,sid,(.+?),', response_data)
+    if not search_results:
         raise Exception("Login failed. Please try again.")
 
-    return m.group(1)
+    return search_results.group(1)
 
 #Use the patch gamever service to retrieve our *actual* sid.
 #Also return's the game's version
