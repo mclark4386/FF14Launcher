@@ -10,6 +10,7 @@ import os
 import hashlib
 import sys
 import ssl
+import datetime
 if (sys.version_info >= (3,0)):
     from urllib.request import Request,urlopen
     from urllib.parse import urlencode
@@ -31,6 +32,10 @@ authentication_url = "https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/l
 
 version_headers = {"X-Hash-Check":"enabled"}
 version_url = "https://patch-gamever.ffxiv.com/http/win32/ffxivneo_release_game/{version}/{sid}"
+
+bootver_headers = {"User-Agent": "FFXIV PATCH CLIENT"}
+bootver_url="http://patch-bootver.ffxiv.com/http/win32/ffxivneo_release_boot/{version}/?time={time}"
+
 
 def open_url(url,data,headers,context=None):
     req = Request(url, data, headers)
@@ -78,3 +83,26 @@ def get_actual_sid(sid,gamepath):
     actual_sid = gamever_result.get("X-Patch-Unique-Id")
     return (actual_sid,version)
 
+#Make sure the launcher is up to date
+def get_boot_version(gamepath):
+    version = ""
+    with open(gamepath+'/boot/ffxivboot.ver', 'r') as f:
+        version = f.readline()
+
+    print(version)
+
+    time     = datetime.datetime.utcnow()
+    time_str = time.strftime("%Y-%m-%d-%H-%M")
+    #The server always expects the end minute to be zero, so have to fixup the time
+    time_str = time_str[:-1] + '0'
+
+    response = open_url(bootver_url.format(version=version,time=time_str), None, bootver_headers, ssl._create_unverified_context())
+    response_data = response.read().decode('utf-8')
+    if (response.headers.get("X-Latest-Version") == version and response_data == ''):
+        return 0
+    #A patch is needed, so extract the patch info from the response
+    search_results = re.search('http://(.*)/boot/(.*)/(.*)\.patch', response_data)
+    if not search_results:
+        raise Exception("Launcher is out of date! Unable to find patch file location.")
+    patch_url = search_results.group(0).strip()
+    raise Exception("Launcher is out of date!  Please download the latest patch file from:  "+patch_url)
