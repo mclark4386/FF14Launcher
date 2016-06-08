@@ -19,8 +19,8 @@ else:
     from urllib  import urlencode
 
 #Constants and magic values used throughout
-login_headers = {"User-Agent":"SQEXAuthor/2.0.0(Windows 6.2; ja-jp; ecf4a84335)"}
-login_url = "https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/top?lng={lng}&rgn={rgn}"
+login_headers = {"User-Agent":"SQEXAuthor/2.0.0(Windows XP; ja-jp; 3aed65f87c)"}
+login_url = "https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/top?lng={lng}&rgn={rgn}&isft=0&issteam=0"
 
 authentication_headers = {
     "User-Agent":"SQEXAuthor/2.0.0(Windows 6.2; ja-jp; ecf4a84335)",
