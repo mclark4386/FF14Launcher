@@ -44,6 +44,14 @@ def open_url(url,data,headers,context=None):
 def gen_hash(file):
     return os.path.basename(file) + "/" + str(os.stat(file).st_size) + "/" + hashlib.sha1(open(file, "rb").read()).hexdigest()
 
+#Parse the update data to determine what to download when the launcher/client is out of date
+def parse_update_data(what_is_updating,update_info):
+    search_results = re.search('http://(.*)/boot/(.*)/(.*)\.patch', update_info)
+    if not search_results:
+        raise Exception(what_is_updating+" is out of date! Unable to find patch file location.")
+    patch_url = search_results.group(0).strip()
+    raise Exception(what_is_updating+" is out of date!  Please download the latest patch file from:  "+patch_url)
+
 #Performs login routine to get sid
 def login(region,username,password,one_time_password):
     #Get the login page for the region
@@ -77,10 +85,15 @@ def get_actual_sid(sid,gamepath):
               +gen_hash(gamepath+"/boot/ffxivlauncher.exe")+"," \
               +gen_hash(gamepath+"/boot/ffxivupdater.exe")
 
-    gamever_result = open_url(version_url.format(version=version,sid=sid), version_hash.encode('utf-8'), version_headers, ssl._create_unverified_context()).info()
-    if (gamever_result.get("X-Latest-Version") != version):
+    response = open_url(version_url.format(version=version,sid=sid), version_hash.encode('utf-8'), version_headers, ssl._create_unverified_context())
+    response_data = response.read().decode('utf-8')
+    actual_sid = response.headers.get("X-Patch-Unique-Id")
+
+    if (response.headers.get("X-Latest-Version") != version or response_data != ''):
+        print(response.headers.as_string())
+        print(response_data)
         raise Exception("Game out of date.  Please run the official launcher to update it.")
-    actual_sid = gamever_result.get("X-Patch-Unique-Id")
+
     return (actual_sid,version)
 
 #Make sure the launcher is up to date
@@ -88,8 +101,6 @@ def get_boot_version(gamepath):
     version = ""
     with open(gamepath+'/boot/ffxivboot.ver', 'r') as f:
         version = f.readline()
-
-    print(version)
 
     time     = datetime.datetime.utcnow()
     time_str = time.strftime("%Y-%m-%d-%H-%M")
@@ -100,9 +111,4 @@ def get_boot_version(gamepath):
     response_data = response.read().decode('utf-8')
     if (response.headers.get("X-Latest-Version") == version and response_data == ''):
         return 0
-    #A patch is needed, so extract the patch info from the response
-    search_results = re.search('http://(.*)/boot/(.*)/(.*)\.patch', response_data)
-    if not search_results:
-        raise Exception("Launcher is out of date! Unable to find patch file location.")
-    patch_url = search_results.group(0).strip()
-    raise Exception("Launcher is out of date!  Please download the latest patch file from:  "+patch_url)
+    parse_update_data("Launcher",response_data)
