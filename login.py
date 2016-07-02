@@ -36,6 +36,8 @@ version_url = "https://patch-gamever.ffxiv.com/http/win32/ffxivneo_release_game/
 bootver_headers = {"User-Agent": "FFXIV PATCH CLIENT"}
 bootver_url="http://patch-bootver.ffxiv.com/http/win32/ffxivneo_release_boot/{version}/?time={time}"
 
+def join_path(path1,path2):
+    return os.path.normpath(os.path.join(path1,path2))
 
 def open_url(url,data,headers,context=None):
     req = Request(url, data, headers)
@@ -78,12 +80,12 @@ def login(region,username,password,one_time_password):
 #Also return's the game's version
 def get_actual_sid(sid,gamepath):
     version = ""
-    with open(gamepath+'/game/ffxivgame.ver', 'r') as f:
+    with open(join_path(gamepath,"game/ffxivgame.ver"), 'r') as f:
         version = f.readline()
 
-    version_hash = gen_hash(gamepath+"/boot/ffxivboot.exe")+"," \
-              +gen_hash(gamepath+"/boot/ffxivlauncher.exe")+"," \
-              +gen_hash(gamepath+"/boot/ffxivupdater.exe")
+    version_hash = gen_hash(join_path(gamepath,"boot/ffxivboot.exe"))+"," \
+              +gen_hash(join_path(gamepath,"boot/ffxivlauncher.exe"))+"," \
+              +gen_hash(join_path(gamepath,"boot/ffxivupdater.exe"))
 
     response = open_url(version_url.format(version=version,sid=sid), version_hash.encode('utf-8'), version_headers, ssl._create_unverified_context())
     response_data = response.read().decode('utf-8')
@@ -99,7 +101,7 @@ def get_actual_sid(sid,gamepath):
 #Make sure the launcher is up to date
 def get_boot_version(gamepath):
     version = ""
-    with open(gamepath+'/boot/ffxivboot.ver', 'r') as f:
+    with open(join_path(gamepath,"boot/ffxivgame.ver"), 'r') as f:
         version = f.readline()
 
     time     = datetime.datetime.utcnow()

@@ -9,30 +9,35 @@
 
 from getpass import getpass
 from login import *
+import subprocess
 if (sys.version_info >= (3,0)):
 	from configparser import ConfigParser
 else:
 	from ConfigParser import ConfigParser
 
-def gen_launcher_string(settings):
-	launcher_str = '{wine_command}' \
-		+' \'{path}/game/ffxiv.exe\'' \
-		+' "language=1"' \
-		+' "DEV.UseSqPack=1" "DEV.DataPathType=1"' \
-		+' "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994"' \
-		+' "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994"' \
-		+' "DEV.TestSID={actual_sid}"' \
-		+' "DEV.MaxEntitledExpansionID={expansion_id}"' \
-		+' "SYS.Region={region}"' \
-		+' "ver={version}"'
-	return launcher_str.format(**settings)
+def gen_launcher_command(settings):
+	launcher_dict = [settings['wine_command'].strip(),
+		join_path(settings['path'],'game/ffxiv.exe'),
+		'language=1',
+		'DEV.UseSqPack=1', 'DEV.DataPathType=1',
+		'DEV.LobbyHost01=neolobby01.ffxiv.com', 'DEV.LobbyPort01=54994',
+		'DEV.LobbyHost02=neolobby02.ffxiv.com', 'DEV.LobbyPort02=54994',
+		'DEV.TestSID='+settings['actual_sid'],
+		'DEV.MaxEntitledExpansionID='+settings['expansion_id'],
+		'SYS.Region='+settings['region'],
+		'ver='+settings['version']]
+	#Deal with an empty wine_command (Running on windows)
+	if launcher_dict[0] == '':
+		launcher_dict = launcher_dict[1:]
+	return launcher_dict
 
 def run(settings):
 	sid=login(settings['region'],settings['user'],settings['password'],settings['one_time_password'])
 	(settings['actual_sid'],settings['version']) = get_actual_sid(sid,settings['path'])
-	launch = gen_launcher_string(settings)
-	print(launch)
-	os.system(launch)
+	launch = gen_launcher_command(settings)
+	for i in launch:
+		print(i,end=' ')
+	subprocess.run(launch)
 
 def run_cli(settings):
 	if (settings['user'] == ''):
@@ -101,7 +106,7 @@ class gui_prompt:
 
 config_path=os.path.dirname(os.path.realpath(sys.argv[0]))
 config = ConfigParser()
-config.read(config_path+'/launcher_config.ini')
+config.read(join_path(config_path,'launcher_config.ini'))
 settings = config._sections['FFXIV']
 
 if len(sys.argv) > 1:
