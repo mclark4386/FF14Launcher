@@ -6,18 +6,27 @@
 # refactoring and changes: Matthew Clark, Arthur Moore, Stian E. Syvertsen
 
 
-
 from getpass import getpass
 from login import *
 import subprocess
+#Needed to handle the config file
+import os
+import sys
 if (sys.version_info >= (3,0)):
 	from configparser import ConfigParser
 else:
 	from ConfigParser import ConfigParser
 
 def gen_launcher_command(settings):
+	exe_path=''
+	if(settings['use_dx11'] == True):
+		exe_path = join_path(settings['path'],'game/ffxiv_dx11.exe')
+	else:
+		exe_path = join_path(settings['path'],'game/ffxiv.exe')
+	print(exe_path)
+	exit()
 	launcher_dict = [settings['wine_command'].strip(),
-		join_path(settings['path'],'game/ffxiv.exe'),
+		exe_path,
 		'language=1',
 		'DEV.UseSqPack=1', 'DEV.DataPathType=1',
 		'DEV.LobbyHost01=neolobby01.ffxiv.com', 'DEV.LobbyPort01=54994',
@@ -104,6 +113,9 @@ class gui_prompt:
 		self.top.title("FFXIV Launcher")
 		self.top.mainloop()
 
+
+
+#Read config file from launcher directory
 config_path=os.path.dirname(os.path.realpath(sys.argv[0]))
 config = ConfigParser()
 config.read(join_path(config_path,'launcher_config.ini'))
