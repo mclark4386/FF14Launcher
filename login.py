@@ -12,10 +12,11 @@ import sys
 import ssl
 import datetime
 if (sys.version_info >= (3,0)):
+    from urllib.error import URLError
     from urllib.request import Request,urlopen
     from urllib.parse import urlencode
 else:
-    from urllib2 import  Request,urlopen
+    from urllib2 import  Request,urlopen,URLError
     from urllib  import urlencode
 
 #Constants and magic values used throughout
@@ -41,7 +42,11 @@ def join_path(path1,path2):
 
 def open_url(url,data,headers,context=None):
     req = Request(url, data, headers)
-    return urlopen(req,context=context)
+    try:
+        return urlopen(req,context=context)
+    except:
+        print("Error accessing",url)
+        raise
 
 def gen_hash(file):
     return os.path.basename(file) + "/" + str(os.stat(file).st_size) + "/" + hashlib.sha1(open(file, "rb").read()).hexdigest()
