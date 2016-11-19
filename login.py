@@ -87,6 +87,8 @@ def get_actual_sid(sid,gamepath):
     version = ""
     with open(join_path(gamepath,"game/ffxivgame.ver"), 'r') as f:
         version = f.readline()
+    if(version == ""):
+        raise Exception("Unable to read version information!")
 
     version_hash = gen_hash(join_path(gamepath,"boot/ffxivboot.exe"))+"," \
               +gen_hash(join_path(gamepath,"boot/ffxivlauncher.exe"))+"," \
