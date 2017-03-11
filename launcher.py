@@ -3,17 +3,19 @@
 # Author: Jordan Henderson
 # This is a fairly quick and nasty implementation of a functional launcher for FFXIV.
 # TODO: ffxivupdate support.
-# refactoring and changes: Matthew Clark, Arthur Moore
+# refactoring and changes: Matthew Clark, Arthur Moore, Stian E. Syvertsen
 
 # Configuration
-USEGUI = True # Use a gui to ask for username, password, and one time password
-region = "3" #Region for authentication checking.
-path = "/" #Path containing boot and game
-wine_command = 'wine' #Prefix execution with 'wine' (for Linux/Mac)
-#wine_command = ''  #For Windows
+USEGUI = True           # Use a gui to ask for username, password, and one time password
+expansionId='0'         # Set this to 1 if you have Heavensward expansion installed.
+region = "3"            # Region for authentication checking.
+path = "/"              # Path containing boot and game (eg. "C:/Program Files (x86)/SquareEnix/FINAL FANTASY XIV - A Realm Reborn")
+wine_command = 'wine'   # Prefix execution with 'wine' (for Linux/Mac)
+#wine_command = ''      # For Windows
 user = ''
 password = ''
 one_time_password = ''
+
 
 import urllib2
 import urllib
@@ -39,7 +41,7 @@ def gen_launcher_string(region,username,password,otpw,gamepath):
 	headers = {"User-Agent":"SQEXAuthor/2.0.0(Windows 6.2; ja-jp; ecf4a84335)"}
 	login_url = "https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/top?lng=en&rgn="+region
 	login_info_req = urllib2.Request(login_url, None, headers)
-	
+
 	login_info = urllib2.urlopen(login_info_req)
 	cookies = login_info.headers.get('Set-Cookie')
 	response = login_info.read()
@@ -72,7 +74,7 @@ def gen_launcher_string(region,username,password,otpw,gamepath):
 	gamever_req = urllib2.Request(gamever_url, hash_str, headers)
 	gamever_result = urllib2.urlopen(gamever_req, context=context)
 	actual_sid = gamever_result.info().getheader("X-Patch-Unique-Id")
-	return ('ffxiv.exe "DEV.TestSID='+ actual_sid + '" "DEV.UseSqPack=1" "DEV.DataPathType=1" "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994" "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994" "SYS.Region=3" "language=1" "ver='+version+'"')
+	return ('ffxiv.exe "DEV.TestSID='+ actual_sid + '" "DEV.UseSqPack=1" "DEV.DataPathType=1" "DEV.LobbyHost01=neolobby01.ffxiv.com" "DEV.LobbyPort01=54994" "DEV.LobbyHost02=neolobby02.ffxiv.com" "DEV.LobbyPort02=54994" "DEV.MaxEntitledExpansionID='+ expansionId +'" "SYS.Region=3" "language=1" "ver='+version+'"')
 
 def set_user_info(root,_user,_password,_one_time_password):
 	global user
