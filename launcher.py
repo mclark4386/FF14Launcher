@@ -24,7 +24,7 @@ def gen_launcher_command(settings):
 	else:
 		exe_path = join_path(settings['path'],'game/ffxiv.exe')
 	print(exe_path)
-	launcher_dict = [settings['wine_command'].strip(),
+	launcher_dict = [settings['pre_command'].strip(),
 		exe_path,
 		'language=1',
 		'DEV.UseSqPack=1', 'DEV.DataPathType=1',
@@ -34,7 +34,7 @@ def gen_launcher_command(settings):
 		'DEV.MaxEntitledExpansionID='+settings['expansion_id'],
 		'SYS.Region='+settings['region'],
 		'ver='+settings['version']]
-	#Deal with an empty wine_command (Running on windows)
+	#Deal with an empty pre_command (Running on windows)
 	if launcher_dict[0] == '':
 		launcher_dict = launcher_dict[1:]
 	return launcher_dict
