@@ -25,7 +25,7 @@ def gen_launcher_command(settings):
 	else:
 		exe_path = join_path(exe_path,'game/ffxiv.exe')
 
-	launcher_dict = [settings['pre_command'].strip(),
+	launcher_dict = [
 		exe_path,
 		'language=1',
 		'DEV.UseSqPack=1', 'DEV.DataPathType=1',
@@ -36,9 +36,9 @@ def gen_launcher_command(settings):
 		'SYS.Region='+settings['region'],
 		'ver='+settings['version']]
 
-	#Deal with an empty pre_command (Running on windows)
-	if launcher_dict[0] == '':
-		launcher_dict = launcher_dict[1:]
+	#Deal with pre_command (NOT Running on windows)
+	if settings['pre_command'].strip() != '':
+		launcher_dict.insert(0,settings['pre_command'].strip())
 
 	return launcher_dict
 
