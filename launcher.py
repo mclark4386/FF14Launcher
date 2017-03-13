@@ -24,7 +24,6 @@ def gen_launcher_command(settings):
 	else:
 		exe_path = join_path(settings['path'],'game/ffxiv.exe')
 	print(exe_path)
-	exit()
 	launcher_dict = [settings['wine_command'].strip(),
 		exe_path,
 		'language=1',
