@@ -94,6 +94,7 @@ def get_actual_sid(sid,gamepath):
               +gen_hash(join_path(gamepath,"boot/ffxivlauncher.exe"))+"," \
               +gen_hash(join_path(gamepath,"boot/ffxivupdater.exe"))
 
+    #Note:  This will fail with a 401 error for someone with an expired subscription
     response = open_url(version_url.format(version=version,sid=sid), version_hash.encode('utf-8'), version_headers, ssl._create_unverified_context())
     response_data = response.read().decode('utf-8')
     actual_sid = response.headers.get("X-Patch-Unique-Id")
