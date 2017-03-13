@@ -18,12 +18,13 @@ else:
 	from ConfigParser import ConfigParser
 
 def gen_launcher_command(settings):
-	exe_path=''
-	if(settings['use_dx11'] == True):
-		exe_path = join_path(settings['path'],'game/ffxiv_dx11.exe')
+	exe_path=settings['path']
+
+	if(settings['use_dx11'].strip() == 'True'):
+		exe_path = join_path(exe_path,'game/ffxiv_dx11.exe')
 	else:
-		exe_path = join_path(settings['path'],'game/ffxiv.exe')
-	print(exe_path)
+		exe_path = join_path(exe_path,'game/ffxiv.exe')
+
 	launcher_dict = [settings['pre_command'].strip(),
 		exe_path,
 		'language=1',
@@ -34,9 +35,11 @@ def gen_launcher_command(settings):
 		'DEV.MaxEntitledExpansionID='+settings['expansion_id'],
 		'SYS.Region='+settings['region'],
 		'ver='+settings['version']]
+
 	#Deal with an empty pre_command (Running on windows)
 	if launcher_dict[0] == '':
 		launcher_dict = launcher_dict[1:]
+
 	return launcher_dict
 
 def run(settings):
