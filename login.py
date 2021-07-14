@@ -24,14 +24,19 @@ login_headers = {"User-Agent":"SQEXAuthor/2.0.0(Windows XP; ja-jp; 3aed65f87c)"}
 login_url = "https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/top?lng={lng}&rgn={rgn}&isft=0&issteam=0"
 
 authentication_headers = {
-    "User-Agent":"SQEXAuthor/2.0.0(Windows 6.2; ja-jp; ecf4a84335)",
-    "Cookie": "",
-    "Referer": "Put_Login_url_here",
-    "Content-Type": "application/x-www-form-urlencoded"
+    "User-Agent":"SQEXAuthor/2.0.0(Windows 6.2; ja-jp; 45d19cc985)",
+    "Cookie":"",
+    "Referer":"https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/top?lng=en&rgn=3&isft=0&issteam=0",
+    "Content-Type":"application/x-www-form-urlencoded"
 }
 authentication_url = "https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/login.send"
 
-version_headers = {"X-Hash-Check":"enabled"}
+version_headers = {
+    "X-Hash-Check":"enabled",
+    "User-Agent":"SQEXAuthor/2.0.0(Windows 6.2; ja-jp; 45d19cc985)",
+    "Content-Type":"application/x-www-form-urlencoded",
+    "Referer":"https://ffxiv-login.square-enix.com/oauth/ffxivarr/login/top?lng=en&rgn=3"
+}
 version_url = "https://patch-gamever.ffxiv.com/http/win32/ffxivneo_release_game/{version}/{sid}"
 
 bootver_headers = {"User-Agent": "FFXIV PATCH CLIENT"}
@@ -76,6 +81,7 @@ def login(region,username,password,one_time_password):
     login_data = urlencode({'_STORED_':search_results.group(1), 'sqexid':username, 'password':password, 'otppw':one_time_password}).encode('utf-8')
     response_data = open_url(authentication_url, login_data, authentication_headers).read().decode('utf-8')
     search_results = re.search('login=auth,ok,sid,(.+?),', response_data)
+    print(re.search('MaxExpansion',response_data))
     if not search_results:
         raise Exception("Login failed. Please try again.")
 
@@ -91,8 +97,11 @@ def get_actual_sid(sid,gamepath):
         raise Exception("Unable to read version information!")
 
     version_hash = gen_hash(join_path(gamepath,"boot/ffxivboot.exe"))+"," \
+              +gen_hash(join_path(gamepath,"boot/ffxivboot64.exe"))+"," \
               +gen_hash(join_path(gamepath,"boot/ffxivlauncher.exe"))+"," \
-              +gen_hash(join_path(gamepath,"boot/ffxivupdater.exe"))
+              +gen_hash(join_path(gamepath,"boot/ffxivlauncher64.exe"))+"," \
+              +gen_hash(join_path(gamepath,"boot/ffxivupdater.exe"))+"," \
+              +gen_hash(join_path(gamepath,"boot/ffxivupdater64.exe"))
 
     #Note:  This will fail with a 401 error for someone with an expired subscription
     response = open_url(version_url.format(version=version,sid=sid), version_hash.encode('utf-8'), version_headers, ssl._create_unverified_context())
