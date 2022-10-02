@@ -48,11 +48,13 @@ def run(settings):
 	launch = gen_launcher_command(settings)
 	for i in launch:
 		print(i,end=' ')
+    #print arguments
+    #print(launch)
 	subprocess.run(launch)
 
 def run_cli(settings):
 	if (settings['user'] == ''):
-		settings['user'] = raw_input("User Name:  ")
+		settings['user'] = input("User Name:  ")
 	if (settings['password'] == ''):
 		settings['password'] = getpass()
 	try:
@@ -111,7 +113,9 @@ class gui_prompt:
 		#Place window in center of screen
 		self.top.eval('tk::PlaceWindow %s center' % self.top.winfo_pathname(self.top.winfo_id()))
 		#Focus on the one time password box at start
-		self.E3.focus()
+		# self.E3.focus()
+		#Focus on the password box at start
+		self.E2.focus()
 		self.top.title("FFXIV Launcher")
 		self.top.mainloop()
 
