@@ -98,9 +98,7 @@ def get_actual_sid(sid,gamepath):
 
     version_hash = gen_hash(join_path(gamepath,"boot/ffxivboot.exe"))+"," \
               +gen_hash(join_path(gamepath,"boot/ffxivboot64.exe"))+"," \
-              +gen_hash(join_path(gamepath,"boot/ffxivlauncher.exe"))+"," \
               +gen_hash(join_path(gamepath,"boot/ffxivlauncher64.exe"))+"," \
-              +gen_hash(join_path(gamepath,"boot/ffxivupdater.exe"))+"," \
               +gen_hash(join_path(gamepath,"boot/ffxivupdater64.exe"))
 
     #Note:  This will fail with a 401 error for someone with an expired subscription
