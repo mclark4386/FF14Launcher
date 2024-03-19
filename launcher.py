@@ -18,12 +18,7 @@ else:
 	from ConfigParser import ConfigParser
 
 def gen_launcher_command(settings):
-	exe_path=settings['path']
-
-	if(settings['use_dx11'].strip() == 'True'):
-		exe_path = join_path(exe_path,'game/ffxiv_dx11.exe')
-	else:
-		exe_path = join_path(exe_path,'game/ffxiv.exe')
+	exe_path=settings['path'] + '/game/ffxiv_dx11.exe'
 
 	launcher_dict = [
 		exe_path,
